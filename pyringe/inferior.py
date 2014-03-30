@@ -32,6 +32,7 @@ import signal
 import subprocess
 import tempfile
 import time
+import distutils.spawn
 
 
 # Setting these overrides the defaults. See _SymbolFilePath.
@@ -151,23 +152,24 @@ class GdbProxy(object):
     self._outfile_r = open(outfile_w.name)
     self._errfile_r = open(errfile_w.name)
 
-    self._process = subprocess.Popen(
-        bufsize=0,
-        args=arglist,
-        stdin=subprocess.PIPE,
-        stdout=outfile_w.file,
-        stderr=errfile_w.file,
-        close_fds=True,
-        preexec_fn=os.setpgrp,
+    if self.is_installed:
+        self._process = subprocess.Popen(
+            bufsize=0,
+            args=arglist,
+            stdin=subprocess.PIPE,
+            stdout=outfile_w.file,
+            stderr=errfile_w.file,
+            close_fds=True,
+            preexec_fn=os.setpgrp,
         )
-    outfile_w.close()
-    errfile_w.close()
+        outfile_w.close()
+        errfile_w.close()
 
-    self._poller = select.poll()
-    self._poller.register(self._outfile_r.fileno(),
-                          select.POLLIN | select.POLLPRI)
-    self._poller.register(self._errfile_r.fileno(),
-                          select.POLLIN | select.POLLPRI)
+        self._poller = select.poll()
+        self._poller.register(self._outfile_r.fileno(),
+                              select.POLLIN | select.POLLPRI)
+        self._poller.register(self._errfile_r.fileno(),
+                              select.POLLIN | select.POLLPRI)
 
   def __getattr__(self, name):
     """Handles transparent proxying to gdb subprocess.
@@ -201,6 +203,17 @@ class GdbProxy(object):
       self._process.wait()
     self._errfile_r.close()
     self._outfile_r.close()
+
+  @property
+  def is_installed(self):
+      """
+      Check if gdb is installed
+      """
+      gdb_path = distutils.spawn.find_executable("gdb")
+      if not gdb_path:
+          raise OSError("I can not find gdb")
+      else:
+          return True
 
   @property
   def is_running(self):
@@ -422,7 +435,7 @@ class Inferior(object):
     # when requested, make sure we have a gdb session to return
     # (in case it crashed at some point)
     if not self._gdb or not self._gdb.is_running:
-      self.StartGdb()
+        self.StartGdb()
     return self._gdb
 
   def StartGdb(self):
