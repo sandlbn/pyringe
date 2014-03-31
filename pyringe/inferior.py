@@ -153,23 +153,23 @@ class GdbProxy(object):
     self._errfile_r = open(errfile_w.name)
 
     if self.is_installed:
-        self._process = subprocess.Popen(
-            bufsize=0,
-            args=arglist,
-            stdin=subprocess.PIPE,
-            stdout=outfile_w.file,
-            stderr=errfile_w.file,
-            close_fds=True,
-            preexec_fn=os.setpgrp,
-        )
-        outfile_w.close()
-        errfile_w.close()
+      self._process = subprocess.Popen(
+        bufsize=0,
+        args=arglist,
+        stdin=subprocess.PIPE,
+        stdout=outfile_w.file,
+        stderr=errfile_w.file,
+        close_fds=True,
+        preexec_fn=os.setpgrp,
+      )
+      outfile_w.close()
+      errfile_w.close()
 
-        self._poller = select.poll()
-        self._poller.register(self._outfile_r.fileno(),
-                              select.POLLIN | select.POLLPRI)
-        self._poller.register(self._errfile_r.fileno(),
-                              select.POLLIN | select.POLLPRI)
+      self._poller = select.poll()
+      self._poller.register(self._outfile_r.fileno(),
+                            select.POLLIN | select.POLLPRI)
+      self._poller.register(self._errfile_r.fileno(),
+                            select.POLLIN | select.POLLPRI)
 
   def __getattr__(self, name):
     """Handles transparent proxying to gdb subprocess.
@@ -435,7 +435,7 @@ class Inferior(object):
     # when requested, make sure we have a gdb session to return
     # (in case it crashed at some point)
     if not self._gdb or not self._gdb.is_running:
-        self.StartGdb()
+      self.StartGdb()
     return self._gdb
 
   def StartGdb(self):
