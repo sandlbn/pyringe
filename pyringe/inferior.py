@@ -206,14 +206,12 @@ class GdbProxy(object):
 
   @property
   def is_installed(self):
-      """
-      Check if gdb is installed
-      """
-      gdb_path = distutils.spawn.find_executable("gdb")
-      if not gdb_path:
-          raise OSError("I can not find gdb")
-      else:
-          return True
+    """ Check if gdb is installed """
+    gdb_path = distutils.spawn.find_executable("gdb")
+    if not gdb_path:
+      raise OSError("I can not find gdb")
+    else:
+      return True
 
   @property
   def is_running(self):
